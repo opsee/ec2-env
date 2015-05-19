@@ -1,29 +1,45 @@
 package main
 
 import (
-	"flag"
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"reflect"
 	"strings"
 )
 
 var metadataURI = "http://169.254.169.254/latest/meta-data"
+var identityURI = "http://169.254.169.254/latest/dynamic/instance-identity/document/"
 
-func getAvailabilityZone() string {
-	return getMetadata("placement/availability-zone")
-}
+// {
+//   "instanceId" : "i-01debbc2",
+//   "billingProducts" : null,
+//   "imageId" : "ami-076e6542",
+//   "architecture" : "x86_64",
+//   "pendingTime" : "2015-01-17T02:17:13Z",
+//   "instanceType" : "t2.micro",
+//   "accountId" : "933693344490",
+//   "kernelId" : null,
+//   "ramdiskId" : null,
+//   "region" : "us-west-1",
+//   "version" : "2010-08-31",
+//   "availabilityZone" : "us-west-1c",
+//   "privateIp" : "172.31.10.200",
+//   "devpayProductCodes" : null
+// }
 
-// map of functions that return (string,error)
-func optionFunctionMap() map[string]func() string {
-	m := make(map[string]func() string)
-
-	m["availability_zone"] = getAvailabilityZone
-	return m
+type instanceData struct {
+	InstanceID string `json:"instanceId" shell:"AWS_INSTANCE_ID"`
+	ImageID    string `json:"imageId" shell:"AWS_IMAGE_ID"`
+	AccountID  string `json:"accountId" shell:"AWS_ACCOUNT_ID"`
+	Region     string `json:"region" shell:"AWS_REGION"`
 }
 
 func buildURL(s string) string {
-	return metadataURI + s
+	return metadataURI + "/" + s
 }
 
 func toShellVar(s string) string {
@@ -34,54 +50,68 @@ func toShellVar(s string) string {
 	return s
 }
 
-func getMetadata(key string) string {
-	resp, err := http.Get(buildURL(key))
+func makeHTTPRequest(url string) ([]byte, error) {
+	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println("# ERROR getting ", key, ": ", err)
-		return ""
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("# ERROR getting ", key, ": ", err)
-		return ""
+		return nil, err
 	}
 
-	return string(body)
+	return body, nil
 }
 
-var (
-	amiID      bool
-	hostname   bool
-	instanceID bool
-	localIPV4  bool
-)
+func readIdentityDoc() (*instanceData, error) {
+	var metadataMap = new(instanceData)
 
-func init() {
-	flag.BoolVar(&amiID, "ami_id", false, "Get instance AMI ID")
-	flag.BoolVar(&hostname, "hostname", false, "Get instance hostname")
-	flag.BoolVar(&instanceID, "instance_id", false, "Get instance ID")
-	flag.BoolVar(&localIPV4, "local_ipv4", false, "Get local IPV4 address")
+	jsonBody, err := makeHTTPRequest(identityURI)
+	if err != nil {
+		return metadataMap, err
+	}
+
+	err = json.Unmarshal(jsonBody, &metadataMap)
+	if err != nil {
+		return metadataMap, err
+	}
+
+	return metadataMap, nil
+}
+
+func shellEncodeInstanceData(d instanceData) ([]byte, error) {
+	var b bytes.Buffer
+
+	typ := reflect.TypeOf(d)
+	val := reflect.ValueOf(d)
+	for i := 0; i < typ.NumField(); i++ {
+		f := typ.Field(i)
+		v := val.Field(i)
+		tag := f.Tag.Get("shell")
+		if tag != "" {
+			_, err := b.WriteString(fmt.Sprintf("export %s=%s\n", tag, v.String()))
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return b.Bytes(), nil
 }
 
 func main() {
-
-	fMap := optionFunctionMap()
-
-	defaultMetadata := []string{
-		"availability_zone",
+	instanceData, err := readIdentityDoc()
+	if err != nil {
+		fmt.Println("ERROR getting instance identity: ", err)
+		os.Exit(255)
 	}
 
-	var additionalMetadata = []string{}
-
-	flag.Parse()
-
-	metadata := append(defaultMetadata, additionalMetadata...)
-
-	for _, element := range metadata {
-		value := (fMap[element])()
-		fmt.Println("export ", toShellVar(element), "=", value)
+	shellEncoded, err := shellEncodeInstanceData(*instanceData)
+	if err != nil {
+		fmt.Println("ERROR encoding to shell variables: ", err)
 	}
 
+	fmt.Println(string(shellEncoded))
 }

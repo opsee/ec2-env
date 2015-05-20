@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
+	"time"
 )
 
 var metadataURI = "http://169.254.169.254/latest/meta-data"
@@ -50,8 +52,10 @@ func toShellVar(s string) string {
 	return s
 }
 
+var client http.Client
+
 func makeHTTPRequest(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +105,19 @@ func shellEncodeInstanceData(d instanceData) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+func dialTimeout(network, addr string) (net.Conn, error) {
+	return net.DialTimeout(network, addr, time.Duration(2*time.Second))
+}
+
 func main() {
+	transport := http.Transport{
+		Dial: dialTimeout,
+	}
+
+	client = http.Client{
+		Transport: &transport,
+	}
+
 	instanceData, err := readIdentityDoc()
 	if err != nil {
 		fmt.Println("ERROR getting instance identity: ", err)

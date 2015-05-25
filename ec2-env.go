@@ -33,6 +33,16 @@ var identityURI = "http://169.254.169.254/latest/dynamic/instance-identity/docum
 //   "devpayProductCodes" : null
 // }
 
+type awsCredentials struct {
+	Code            string `json:"Code"`
+	LastUpdated     string `json:"LastUpdated"`
+	Type            string `json:"Type"`
+	AccessKeyID     string `json:"AccessKeyId" shell:"AWS_ACCESS_KEY_ID"`
+	SecretAccessKey string `json:"SecretAccessKey" shell:"AWS_SECRET_ACCESS_KEY"`
+	Token           string `json:"Token" shell:"AWS_SESSION_TOKEN"`
+	Expiration      string `json:"Expiration"`
+}
+
 type instanceData struct {
 	InstanceID string `json:"instanceId" shell:"AWS_INSTANCE_ID"`
 	ImageID    string `json:"imageId" shell:"AWS_IMAGE_ID"`
@@ -69,27 +79,45 @@ func makeHTTPRequest(url string) ([]byte, error) {
 	return body, nil
 }
 
-func readIdentityDoc() (*instanceData, error) {
-	var metadataMap = new(instanceData)
+func getInstanceData() (*instanceData, error) {
+	var d = new(instanceData)
 
 	jsonBody, err := makeHTTPRequest(identityURI)
 	if err != nil {
-		return metadataMap, err
+		return d, err
 	}
 
-	err = json.Unmarshal(jsonBody, &metadataMap)
+	err = json.Unmarshal(jsonBody, &d)
 	if err != nil {
-		return metadataMap, err
+		return d, err
 	}
 
-	return metadataMap, nil
+	return d, nil
 }
 
-func shellEncodeInstanceData(d instanceData) ([]byte, error) {
+func getAwsCredentials() (*awsCredentials, error) {
+	var creds = new(awsCredentials)
+
+	credentialsURI := buildURL("iam/security-credentials/CoreOS_Cluster_Role")
+
+	jsonBody, err := makeHTTPRequest(credentialsURI)
+	if err != nil {
+		return creds, err
+	}
+
+	err = json.Unmarshal(jsonBody, &creds)
+	if err != nil {
+		return creds, err
+	}
+
+	return creds, nil
+}
+
+func shellEncode(i interface{}) ([]byte, error) {
 	var b bytes.Buffer
 
-	typ := reflect.TypeOf(d)
-	val := reflect.ValueOf(d)
+	typ := reflect.TypeOf(i)
+	val := reflect.ValueOf(i)
 	for i := 0; i < typ.NumField(); i++ {
 		f := typ.Field(i)
 		v := val.Field(i)
@@ -118,16 +146,28 @@ func main() {
 		Transport: &transport,
 	}
 
-	instanceData, err := readIdentityDoc()
+	instanceData, err := getInstanceData()
 	if err != nil {
 		fmt.Println("ERROR getting instance identity: ", err)
 		os.Exit(255)
 	}
 
-	shellEncoded, err := shellEncodeInstanceData(*instanceData)
+	credentials, err := getAwsCredentials()
+	if err != nil {
+		fmt.Println("ERROR getting instance identity: ", err)
+		os.Exit(255)
+	}
+
+	encoded, err := shellEncode(*instanceData)
+	if err != nil {
+		fmt.Println("ERROR encoding to shell variables: ", err)
+	}
+	fmt.Print(string(encoded))
+
+	encoded, err = shellEncode(*credentials)
 	if err != nil {
 		fmt.Println("ERROR encoding to shell variables: ", err)
 	}
 
-	fmt.Println(string(shellEncoded))
+	fmt.Print(string(encoded))
 }

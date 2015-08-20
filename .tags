@@ -1,0 +1,24 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	0	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+ec2-env	/Users/grepory/dev/opsee/ec2-env/README.md	/^# ec2-env$/;"	function	line:1
+Usage	/Users/grepory/dev/opsee/ec2-env/README.md	/^## Usage$/;"	function	line:5
+metadataURI	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^var metadataURI = "http:\/\/169.254.169.254\/latest\/meta-data"$/;"	var	line:16
+identityURI	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^var identityURI = "http:\/\/169.254.169.254\/latest\/dynamic\/instance-identity\/document\/"$/;"	var	line:17
+awsCredentials	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^type awsCredentials struct {$/;"	type	line:36
+instanceData	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^type instanceData struct {$/;"	type	line:46
+buildURL	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^func buildURL(s string) string {$/;"	func	line:53
+toShellVar	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^func toShellVar(s string) string {$/;"	func	line:57
+client	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^var client http.Client$/;"	var	line:65
+makeHTTPRequest	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^func makeHTTPRequest(url string) ([]byte, error) {$/;"	func	line:67
+getInstanceData	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^func getInstanceData() (*instanceData, error) {$/;"	func	line:82
+d	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^	var d = new(instanceData)$/;"	var	line:83
+getAwsCredentials	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^func getAwsCredentials() (*awsCredentials, error) {$/;"	func	line:98
+creds	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^	var creds = new(awsCredentials)$/;"	var	line:99
+shellEncode	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^func shellEncode(i interface{}) ([]byte, error) {$/;"	func	line:116
+b	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^	var b bytes.Buffer$/;"	var	line:117
+dialTimeout	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^func dialTimeout(network, addr string) (net.Conn, error) {$/;"	func	line:136
+main	/Users/grepory/dev/opsee/ec2-env/src/cmd/ec2-env/main.go	/^func main() {$/;"	func	line:140

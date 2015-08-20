@@ -4,8 +4,8 @@ Generate exports for environment variables for AWS EC2 instances.
 
 ## Usage
 
-Primarily useful in shell startup scripts.
+Primarily useful in shell startup scripts and systemd units as an EnvironmentFile.
 
-```
-eval "$(./ec2-env)"
-```
+## Building
+
+`$ gb build`

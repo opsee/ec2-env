@@ -47,7 +47,7 @@ type instanceData struct {
 	InstanceID string `json:"instanceId" shell:"AWS_INSTANCE_ID"`
 	ImageID    string `json:"imageId" shell:"AWS_IMAGE_ID"`
 	AccountID  string `json:"accountId" shell:"AWS_ACCOUNT_ID"`
-	Region     string `json:"region" shell:"AWS_REGION"`
+	Region     string `json:"region" shell:"AWS_DEFAULT_REGION"`
 }
 
 func buildURL(s string) string {

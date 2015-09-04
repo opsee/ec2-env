@@ -1,0 +1,20 @@
+machine:
+  services:
+    - docker
+  environment:
+    ci: "true"
+dependencies:
+  override:
+    - docker info
+    - go version
+    - docker pull quay.io/opsee/build-go
+    - sudo pip install awscli
+test:
+  override:
+    - docker run -e "TARGETS=linux/amd64" -v `pwd`:/build quay.io/opsee/build-go
+deployment:
+  s3:
+    branch: master
+    owner: opsee
+    commands:
+      - aws s3 cp target/linux/amd64/ec2-env s3://opsee-releases/go/ec2-env/ec2-env-linux-amd64
